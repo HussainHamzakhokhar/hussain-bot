@@ -8,7 +8,7 @@ const PHONE_ID = '1399136463277961';
 const VERIFY_TOKEN = 'hussain123';
 
 app.get('/', (req, res) => {
-  res.send('Hussain Digital Bot is LIVE!');
+  res.send('Bot LIVE');
 });
 
 app.get('/webhook', (req, res) => {
@@ -21,21 +21,48 @@ app.get('/webhook', (req, res) => {
 
 app.post('/webhook', async (req, res) => {
   try {
-    const msg = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    const entry = req.body.entry && req.body.entry[0];
+    const changes = entry && entry.changes && entry.changes[0];
+    const value = changes && changes.value;
+    const msg = value && value.messages && value.messages[0];
+
     if (msg) {
       const from = msg.from;
-      const text = msg.text?.body || '';
+      const body = msg.text && msg.text.body? msg.text.body.trim() : '';
+      let reply = 'Salam! Welcome to Hussain Digital\n1 Material\n2 Price\n3 Delivery\n4 Owner';
 
-      let reply = "As-salamu Alaikum! Welcome to Hussain Digital Material Carriage 🚚\n\n1️⃣ Material List\n2️⃣ Price List\n3️⃣ Delivery Charges\n4️⃣ Talk to Owner";
+      if (body === '1') {
+        reply = 'Materials: Cement, Steel, Bricks, Crush, Sand';
+      }
+      if (body === '2') {
+        reply = 'Rates: Cement 1450/bag, Steel 245/kg, Bricks 18/pc. Call for final rate.';
+      }
+      if (body === '3') {
+        reply = 'Delivery: Islamabad 2000-4000, Rawalpindi 3000-5000 per trolley.';
+      }
+      if (body === '4') {
+        reply = 'Owner will call you in 5 mins. Please send name and location.';
+      }
 
-      if (text == "1") {
-        reply = "Our Materials:\n- Cement (Bestway, Lucky)\n- Steel / Sariya\n- Bricks Awwal\n- Crush / Bajri\n- Sand / Reti";
-      }
-      if (text == "2") {
-        reply = "Today Islamabad Rates:\nCement: 1450/bag\nSteel: 245/kg\nBricks: 18/pc\n*Call owner for final rate*";
-      }
-      if (text == "3") {
-        reply = "Delivery:\nIslamabad: 2000-4000/trolley\nRawalpindi: 3000-5000/trolley\nSend location for exact.";
-      }
-      if (text == "4") {
-        reply = "Owner will call you in 5 mins InshaAllah. Please send your Name and
+      await axios.post(
+        'https://graph.facebook.com/v23.0/' + PHONE_ID + '/messages',
+        {
+          messaging_product: 'whatsapp',
+          to: from,
+          type: 'text',
+          text: { body: reply }
+        },
+        {
+          headers: { Authorization: 'Bearer ' + TOKEN }
+        }
+      );
+    }
+    res.sendStatus(200);
+  } catch (e) {
+    console.log('Error', e.message);
+    res.sendStatus(200);
+  }
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log('Bot running on ' + PORT));
